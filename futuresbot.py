@@ -78,51 +78,35 @@ def executeSell():
     currentPosition.inPosition = False
     currentPosition.buyPrice = 0
 
-async def main():
-    global loop
+while True:
+    current_hour = datetime.now().hour
+    if(datetime.now().hour != current_hour):
+        DF()
+    df.iloc[0]["close"] = marketClient.get_ticker('ETH-USDT')['price']
 
-    # callback function that receives messages from the socket
-    async def handle_evt(msg):
-        if msg['topic'] == '/market/ticker:ETH-USDT':
-            current_hour = datetime.now().hour
-            if(datetime.now().hour != current_hour):
-                DF()
-            df.iloc[0]["close"] = f'{msg["data"]["price"]}'
+    # Indicators
+    price_current = pd.to_numeric(df.iloc[::-1]['close'])[0]
+    ema_200_current = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 200, False)[0]
+    sma_9_current = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 17, False)[0]
+    sma_9_trailing = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 17, False)[1]
+    rsi_k_current = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[0]
+    rsi_d_current = stochrsi_d(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[0]
+    rsi_k_trailing = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[1]
 
-            # Indicators
-            price_current = pd.to_numeric(df.iloc[::-1]['close'])[0]
-            ema_200_current = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 200, False)[0]
-            sma_9_current = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 17, False)[0]
-            sma_9_trailing = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 17, False)[1]
-            rsi_k_current = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[0]
-            rsi_d_current = stochrsi_d(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[0]
-            rsi_k_trailing = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[1]
+        # Buying conditions --------------------- check for kucoin position before running
+    if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and
+        smaupward(sma_9_current, sma_9_trailing) and 
+        priceup(price_current, ema_200_current, sma_9_current) and
+        currentPosition.inPosition == False):
+        # Execute a buy
+        executeBuy()
 
-             # Buying conditions --------------------- check for kucoin position before running
-            if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and
-                smaupward(sma_9_current, sma_9_trailing) and 
-                priceup(price_current, ema_200_current, sma_9_current) and
-                currentPosition.inPosition == False):
-                # Execute a buy
-                executeBuy()
+    # Selling conditions, can sell on the same tick as buy
+    if((price_current > currentPosition.TP or price_current < currentPosition.SL) and currentPosition.inPosition == True):
+        # Execute a sell
+        executeSell()
 
-            # Selling conditions, can sell on the same tick as buy
-            if((price_current > currentPosition.TP or price_current < currentPosition.SL) and currentPosition.inPosition == True):
-                # Execute a sell
-                executeSell()
-
-            # print(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupward(sma_9_current, sma_9_trailing), priceup(price_current, ema_200_current, sma_9_current))
-            print(len(df))
-    
-    ksm = await KucoinSocketManager.create(loop, marketClient, handle_evt)
-
-    # ETH-USDT Market Ticker
-    await ksm.subscribe('/market/ticker:ETH-USDT')
-
-    while True:
-        await asyncio.sleep(1)
-
-if __name__ == "__main__":
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    # print(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupward(sma_9_current, sma_9_trailing), priceup(price_current, ema_200_current, sma_9_current))
+    # print(ema_200_current, sma_9_current, rsi_k_current)
+    print(price_current)
+    time.sleep(1)
