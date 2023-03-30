@@ -64,11 +64,17 @@ df = updateDataFrame()
 
 def DF():
     global df
-    df = updateDataFrame()
+    try:
+        df = updateDataFrame()
+    except:
+        time.sleep(1)
+        print('error')
+        df = updateDataFrame()
 
 def executeBuy():
     tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
     currentPosition.inPosition = True
+    time.sleep(2)
     currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
     currentPosition.TP = currentPosition.buyPrice + takeProfit
     currentPosition.SL = currentPosition.buyPrice - stopLoss
@@ -80,6 +86,7 @@ def executeSell():
 
 while True:
     current_hour = datetime.now().hour
+    time.sleep(5)
     if(datetime.now().hour != current_hour):
         DF()
     df.iloc[0]["close"] = marketClient.get_ticker('ETH-USDT')['price']
@@ -106,7 +113,9 @@ while True:
         # Execute a sell
         executeSell()
 
-    # print(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupward(sma_9_current, sma_9_trailing), priceup(price_current, ema_200_current, sma_9_current))
+    
     # print(ema_200_current, sma_9_current, rsi_k_current)
+    print(len(df))
     print(price_current)
-    time.sleep(1)
+    print(ema_200_current, sma_9_current, rsi_k_current)
+    print(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupward(sma_9_current, sma_9_trailing), priceup(price_current, ema_200_current, sma_9_current))
