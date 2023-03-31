@@ -72,7 +72,11 @@ def DF():
         df = updateDataFrame()
 
 def executeBuy():
-    tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
+    try:
+        tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
+    except:
+        time.sleep(1)
+        tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
     currentPosition.inPosition = True
     time.sleep(2)
     currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
@@ -80,7 +84,11 @@ def executeBuy():
     currentPosition.SL = currentPosition.buyPrice - stopLoss
 
 def executeSell():
-    tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
+    try:
+        tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
+    except:
+        time.sleep(1)
+        tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
     currentPosition.inPosition = False
     currentPosition.buyPrice = 0
 
@@ -119,3 +127,5 @@ while True:
     print(price_current)
     print(ema_200_current, sma_9_current, rsi_k_current)
     print(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupward(sma_9_current, sma_9_trailing), priceup(price_current, ema_200_current, sma_9_current))
+    if(currentPosition.inPosition == True):
+        print(currentPosition.buyPrice, currentPosition.TP, currentPosition.SL)
