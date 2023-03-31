@@ -64,12 +64,15 @@ df = updateDataFrame()
 
 def DF():
     global df
-    try:
-        df = updateDataFrame()
-    except:
-        time.sleep(1)
-        print('error')
-        df = updateDataFrame()
+    while True:
+        try:
+            df = updateDataFrame()
+            break
+        except:
+            time.sleep(1)
+            print('error')
+            pass
+
 
 def executeBuy():
     try:
