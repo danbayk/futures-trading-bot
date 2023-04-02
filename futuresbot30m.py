@@ -69,7 +69,6 @@ def executeBuy():
         except:
             time.sleep(1)
             print('error')
-            tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
             pass
     currentPosition.inPosition = True
     time.sleep(2)
@@ -84,7 +83,7 @@ def executeSell():
             break
         except:
             time.sleep(1)
-            tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
+            print('error')
             pass
     currentPosition.inPosition = False
     currentPosition.buyPrice = 0
