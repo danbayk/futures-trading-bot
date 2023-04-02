@@ -22,8 +22,8 @@ api_secret = os.getenv('API_SECRET_FUTURES')
 api_passphrase = os.getenv('API_PASSPHRASE_FUTURES')
 tradeClient = Trade(key = api_key, secret = api_secret, passphrase = api_passphrase, is_sandbox = False)
 
-takeProfit = 25
-stopLoss = 15
+takeProfit = 20
+stopLoss = 10
 
 # Current position details
 class currentPosition:
@@ -46,7 +46,7 @@ def kupward(rsi_k_current, rsi_k_trailing, rsi_d_current):
             (rsi_k_current > 0.5))
 
 def smaupward(sma_9_current, sma_9_trailing):
-    return (sma_9_current - sma_9_trailing) > 0.9
+    return (sma_9_current - sma_9_trailing) > 0.7
 
 def priceup(price_current, ema_200_current, sma_9_current):
     return ((price_current > ema_200_current) and 
@@ -62,11 +62,15 @@ df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT',
 
 
 def executeBuy():
-    try:
-        tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
-    except:
-        time.sleep(1)
-        tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
+    while True:
+        try:
+            tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
+            break
+        except:
+            time.sleep(1)
+            print('error')
+            tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
+            pass
     currentPosition.inPosition = True
     time.sleep(2)
     currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
@@ -74,11 +78,14 @@ def executeBuy():
     currentPosition.SL = currentPosition.buyPrice - stopLoss
 
 def executeSell():
-    try:
-        tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
-    except:
-        time.sleep(1)
-        tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
+    while True:
+        try:
+            tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
+            break
+        except:
+            time.sleep(1)
+            tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
+            pass
     currentPosition.inPosition = False
     currentPosition.buyPrice = 0
 
