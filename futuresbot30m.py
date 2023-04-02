@@ -133,4 +133,5 @@ while True:
     print(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupward(sma_9_current, sma_9_trailing), priceup(price_current, ema_200_current, sma_9_current))
     print(ema_200_current, sma_9_current, rsi_k_current, rsi_k_trailing)
     if(currentPosition.inPosition == True):
+        print("---IN POSITION---")
         print(currentPosition.buyPrice, currentPosition.TP, currentPosition.SL)
