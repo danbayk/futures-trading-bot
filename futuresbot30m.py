@@ -56,7 +56,7 @@ def priceup(price_current, ema_200_current, sma_9_current):
 # Request large enough data set for accurate indicators and create dataframe
 df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
                                             '30min', 
-                                            round(datetime(2023, 3, 20).replace(tzinfo=timezone.utc).timestamp()), 
+                                            round(datetime(2023, 3, 5).replace(tzinfo=timezone.utc).timestamp()), 
                                             round(time.time())), 
                                             columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
 
@@ -98,7 +98,7 @@ while True:
             try:
                 df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
                                             '30min', 
-                                            round(datetime(2023, 3, 1).replace(tzinfo=timezone.utc).timestamp()), 
+                                            round(datetime(2023, 3, 5).replace(tzinfo=timezone.utc).timestamp()), 
                                             round(time.time())), 
                                             columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
                 break
