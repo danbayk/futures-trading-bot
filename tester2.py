@@ -65,8 +65,11 @@ class TestStrategy(bt.Strategy):
 
     def next(self):
         global positionStats
-
-        df.loc[len(df.index)] = [self.dataclose[0]]
+        if(len(df) == 0):
+            df.loc[len(df.index)] = [self.dataclose[0]]
+        else:
+            df.loc[len(df.index) - 1] = [self.dataclose[-1]]
+            df.loc[len(df.index)] = [self.datahigh[0]]
         df_open.loc[len(df_open.index)] = [self.dataopen[0]]
         price_current = pd.to_numeric(df['close'])[len(df) - 1]
         price_previous_open = pd.to_numeric(df_open['open'])[0 if len(df) == 1 else len(df) - 2]
