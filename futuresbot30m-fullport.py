@@ -90,6 +90,7 @@ def executeBuy():
 
 # Execute a sell, endpoint occationally throws error due to an API issue, current official Kucoin fix is "retry the call"
 def executeSell():
+    global balance
     while True:
         try:
             tradeClient.create_market_order('ETHUSDTM', 'sell', '5', 'UUID', size=currentPosition.amtLots)
@@ -101,6 +102,14 @@ def executeSell():
     currentPosition.inPosition = False
     currentPosition.buyPrice = 0
     currentPosition.amtLots = 0
+    while True:
+        try:
+            balance = userClient.get_account_overview('USDT')['availableBalance']
+            break
+        except:
+            time.sleep(1)
+            print('error')
+            pass
 
 completeUpdate = False
 while True:
@@ -121,7 +130,14 @@ while True:
                 print('error')
                 pass
         completeUpdate = True
-    df.iloc[0]["close"] = marketClient.get_ticker('ETH-USDT')['price']
+    while True:
+        try:
+            df.iloc[0]["close"] = marketClient.get_ticker('ETH-USDT')['price']
+            break
+        except:
+            time.sleep(11)
+            print('error')
+            pass
 
     # Indicators
     price_current = pd.to_numeric(df.iloc[::-1]['close'])[0]
