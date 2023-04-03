@@ -42,7 +42,14 @@ class currentPosition:
 # Establish previous state in the event of a crash/restart
 if(len(tradeClient.get_all_position()) == 1):
     currentPosition.inPosition = True
-    currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
+    while True:
+        try:
+            currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
+            break
+        except:
+            time.sleep(1)
+            print('error')
+            pass
     currentPosition.TP = currentPosition.buyPrice + takeProfit
     currentPosition.SL = currentPosition.buyPrice - stopLoss
 
@@ -56,9 +63,10 @@ def smaupward(sma_9_current, sma_9_trailing):
     return (sma_9_current - sma_9_trailing) > 0.7
 
 def priceup(price_current, ema_200_current, sma_9_current):
-    return ((price_current > ema_200_current) and 
-            (price_current > sma_9_current) and 
-            (sma_9_current > ema_200_current))
+    # return ((price_current > ema_200_current) and 
+    #         (price_current > sma_9_current) and 
+    #         (sma_9_current > ema_200_current))
+    return (price_current > sma_9_current)
 
 # Request large enough data set for accurate indicators and create dataframe
 df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
@@ -74,7 +82,7 @@ balance = userClient.get_account_overview('USDT')['availableBalance']
 def executeBuy():
     while True:
         try:
-            buyAmt = int((balance/(marketClient.get_ticker('ETH-USDT')['price']))/0.01)
+            buyAmt = int((balance/float(marketClient.get_ticker('ETH-USDT')['price']))/0.01)
             tradeClient.create_market_order('ETHUSDTM', 'buy', '5', 'UUID', size=buyAmt)
             currentPosition.amtLots = buyAmt
             break
@@ -84,7 +92,14 @@ def executeBuy():
             pass
     currentPosition.inPosition = True
     time.sleep(2)
-    currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
+    while True:
+        try:
+            currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
+            break
+        except:
+            time.sleep(1)
+            print('error')
+            pass
     currentPosition.TP = currentPosition.buyPrice + takeProfit
     currentPosition.SL = currentPosition.buyPrice - stopLoss
 
@@ -148,7 +163,7 @@ while True:
     rsi_d_current = stochrsi_d(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[0]
     rsi_k_trailing = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[1]
 
-    # Buying conditions --------------------- check for kucoin position before running
+    # Buying conditions
     if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and
         smaupward(sma_9_current, sma_9_trailing) and 
         priceup(price_current, ema_200_current, sma_9_current) and
