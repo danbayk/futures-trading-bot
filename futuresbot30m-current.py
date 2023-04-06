@@ -28,8 +28,10 @@ api_passphrase = os.getenv('API_PASSPHRASE_FUTURES')
 tradeClient = Trade(key = api_key, secret = api_secret, passphrase = api_passphrase, is_sandbox = False)
 userClient = User(api_key, api_secret, api_passphrase)
 
+# User-modified parameters, default is best for ETH-USDT 30m trading
 takeProfit = 20
 stopLoss = 10
+leverage = 5
 
 # Current position details
 class currentPosition:
@@ -68,13 +70,6 @@ def priceup(price_current, ema_200_current, sma_9_current):
     #         (sma_9_current > ema_200_current))
     return (price_current > sma_9_current)
 
-# Request large enough data set for accurate indicators and create dataframe
-df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
-                                            '30min', 
-                                            round(datetime(2023, 3, 5).replace(tzinfo=timezone.utc).timestamp()), 
-                                            round(time.time())), 
-                                            columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
-
 # Get user balance for executeBuy() and executeSell()
 balance = userClient.get_account_overview('USDT')['availableBalance']
 
@@ -82,7 +77,7 @@ balance = userClient.get_account_overview('USDT')['availableBalance']
 def executeBuy():
     while True:
         try:
-            buyAmt = int((balance/float(marketClient.get_ticker('ETH-USDT')['price']))/0.01)
+            buyAmt = int((balance/float(marketClient.get_ticker('ETH-USDT')['price']))/0.01) * leverage
             tradeClient.create_market_order('ETHUSDTM', 'buy', '5', 'UUID', size=buyAmt)
             currentPosition.amtLots = buyAmt
             break
@@ -128,33 +123,20 @@ def executeSell():
 
 completeUpdate = False
 while True:
-    time.sleep(5)
-    if(datetime.now().minute == 1 or datetime.now().minute == 31):
-        completeUpdate = False
-    if((datetime.now().minute == 30 or datetime.now().minute == 0) and completeUpdate == False):
-        time.sleep(2)
-        print('updated')
-        while True:
-            try:
-                df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
+    while True:
+        try:
+            # Request large enough data set for accurate indicators and create dataframe
+            df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
                                             '30min', 
                                             round(datetime(2023, 3, 5).replace(tzinfo=timezone.utc).timestamp()), 
                                             round(time.time())), 
                                             columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
-                break
-            except:
-                time.sleep(1)
-                print('error')
-                pass
-        completeUpdate = True
-    while True:
-        try:
-            df.iloc[0]["close"] = marketClient.get_ticker('ETH-USDT')['price']
             break
         except:
             time.sleep(11)
             print('error')
             pass
+    
 
     # Indicators
     price_current = pd.to_numeric(df.iloc[::-1]['close'])[0]
@@ -185,3 +167,4 @@ while True:
     if(currentPosition.inPosition == True):
         print("---IN POSITION---")
         print(currentPosition.buyPrice, currentPosition.TP, currentPosition.SL)
+    time.sleep(5)

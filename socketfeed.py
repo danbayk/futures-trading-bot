@@ -22,12 +22,10 @@ marketClient = Client(os.getenv('API_KEY'), os.getenv('API_SECRET'), os.getenv('
 api_key = os.getenv('API_KEY_FUTURES')
 api_secret = os.getenv('API_SECRET_FUTURES')
 api_passphrase = os.getenv('API_PASSPHRASE_FUTURES')
-# ----- SANDBOX API -----
-# api_key = os.getenv('API_KEY_SANDBOX')
-# api_secret = os.getenv('API_SECRET_SANDBOX')
-# api_passphrase = os.getenv('API_PASSPHRASE_SANDBOX')
+
 tradeClient = Trade(key = api_key, secret = api_secret, passphrase = api_passphrase, is_sandbox = False)
 userClient = User(api_key, api_secret, api_passphrase)
 
 balance = userClient.get_account_overview('USDT')['availableBalance']
-print(int((balance/float(marketClient.get_ticker('ETH-USDT')['price']))/0.01))
+buyAmt = int((balance/float(marketClient.get_ticker('ETH-USDT')['price']))/0.01)
+print(buyAmt*5)

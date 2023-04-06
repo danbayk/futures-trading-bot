@@ -18,9 +18,9 @@ marketClient = Client(os.getenv('API_KEY'), os.getenv('API_SECRET'), os.getenv('
 
 # JAN 1, 2023 --> FEB 1, 2023
 df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
-                                            '30min', 
-                                            round(datetime(2023, 1, 1).replace(tzinfo=timezone.utc).timestamp()), 
-                                            round(datetime(2023, 2, 1, 0, 30).replace(tzinfo=timezone.utc).timestamp())), 
+                                            '4hour', 
+                                            round(datetime(2022, 8, 1).replace(tzinfo=timezone.utc).timestamp()), 
+                                            round(datetime(2023, 4, 1, 0, 30).replace(tzinfo=timezone.utc).timestamp())), 
                                             columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
 
-df.to_csv('jantofeb.csv')
+df.to_csv('augtoapr4h-kucoin.csv')

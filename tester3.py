@@ -12,20 +12,20 @@ import datetime
 # Variable values for testing
 
 # Interchange with any chart with the same column format
-chart = 'september-to-april-kucoin-30m.csv'
+chart = 'kucoin4h.csv'
 # Starting capital
 initialCapital = 1000
 # Set take profit (dollars)
-takeprofit = 20
+takeprofit = 30
 # Set stop loss (dollars)
-stoploss = 10
+stoploss = 15
 # Futures leverage amount (ex. '5' --> 5x leverage)
 leverage = 5
 
 cerebro = bt.Cerebro()
 feed = GenericCSVData(dataname=chart,
                       dtformat = ('%m/%d/%Y'),
-                      fromdate = datetime.datetime(2023, 1, 5),
+                      # fromdate = datetime.datetime(2023, 1, 5),
                       date = 0,
                       open = 1,
                       high = 2,
@@ -98,10 +98,10 @@ class TestStrategy(bt.Strategy):
             return (((rsi_k_current - rsi_k_trailing) > 0.05) and (rsi_k_current > rsi_d_current) and (rsi_k_current > 0.5))
 
         def smaupward():
-            return (sma_9_current - sma_9_trailing) > 0.7
+            return (sma_9_current - sma_9_trailing) > 10
 
         def priceup():
-            return ((price_current > ema_200_current) and (price_current > sma_9_current) and (sma_9_current > ema_200_current))
+            return ((price_current > sma_9_current))
 
         if(kupward() and smaupward() and priceup() and currentPosition.inPosition == False):
             currentPosition.inPosition = True
