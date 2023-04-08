@@ -8,6 +8,7 @@ from ta.momentum import stochrsi_k, stochrsi_d
 import pandas as pd
 from datetime import datetime
 from datetime import timezone
+import traceback
 import asyncio
 import time
 import os
@@ -50,7 +51,7 @@ if(len(tradeClient.get_all_position()) == 1):
             break
         except:
             time.sleep(1)
-            print('error')
+            traceback.print_exc()
             pass
     currentPosition.TP = currentPosition.buyPrice + takeProfit
     currentPosition.SL = currentPosition.buyPrice - stopLoss
@@ -70,58 +71,53 @@ def priceup(price_current, ema_200_current, sma_9_current):
     #         (sma_9_current > ema_200_current))
     return (price_current > sma_9_current)
 
-# Get user balance for executeBuy() and executeSell()
-balance = userClient.get_account_overview('USDT')['availableBalance']
-
-# Execute a buy, endpoint occationally throws error due to an API issue, current official Kucoin fix is "retry the call"
+# Execute a buy
 def executeBuy():
     while True:
         try:
-            buyAmt = int((balance/float(marketClient.get_ticker('ETH-USDT')['price']))/0.01) * leverage
+            # Get account balance and price in USDT
+            balance = userClient.get_account_overview('USDT')['availableBalance']
+            currentPrice = marketClient.get_ticker('ETH-USDT')['price']
+            # Get buy amount in lots (0.01 ETH) * leverage
+            buyAmt = int((balance/float(currentPrice))/0.01) * leverage
+            # Place a ETH-USDT market order with calculated parameters
             tradeClient.create_market_order('ETHUSDTM', 'buy', '5', 'UUID', size=buyAmt)
             currentPosition.amtLots = buyAmt
             break
         except:
-            time.sleep(1)
-            print('error')
+            time.sleep(11)
+            traceback.print_exc()
             pass
     currentPosition.inPosition = True
+    # Sleep to make sure avgEntryPrice is updated on exchange
     time.sleep(2)
     while True:
         try:
+            # Set buyprice to exchange-determined entry price
             currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
             break
         except:
-            time.sleep(1)
-            print('error')
+            time.sleep(11)
+            traceback.print_exc()
             pass
     currentPosition.TP = currentPosition.buyPrice + takeProfit
     currentPosition.SL = currentPosition.buyPrice - stopLoss
 
-# Execute a sell, endpoint occationally throws error due to an API issue, current official Kucoin fix is "retry the call"
+# Execute a sell
 def executeSell():
-    global balance
     while True:
         try:
             tradeClient.create_market_order('ETHUSDTM', 'sell', '5', 'UUID', size=currentPosition.amtLots)
             break
         except:
             time.sleep(1)
-            print('error')
+            traceback.print_exc()
             pass
     currentPosition.inPosition = False
     currentPosition.buyPrice = 0
     currentPosition.amtLots = 0
-    while True:
-        try:
-            balance = userClient.get_account_overview('USDT')['availableBalance']
-            break
-        except:
-            time.sleep(1)
-            print('error')
-            pass
 
-completeUpdate = False
+# Bot loop
 while True:
     while True:
         try:
@@ -134,7 +130,7 @@ while True:
             break
         except:
             time.sleep(11)
-            print('error')
+            traceback.print_exc()
             pass
     
 

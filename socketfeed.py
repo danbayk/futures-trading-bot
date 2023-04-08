@@ -8,6 +8,7 @@ from ta.momentum import stochrsi_k, stochrsi_d
 import pandas as pd
 from datetime import datetime
 from datetime import timezone
+import traceback
 import asyncio
 import time
 import os
@@ -27,5 +28,11 @@ tradeClient = Trade(key = api_key, secret = api_secret, passphrase = api_passphr
 userClient = User(api_key, api_secret, api_passphrase)
 
 balance = userClient.get_account_overview('USDT')['availableBalance']
-buyAmt = int((balance/float(marketClient.get_ticker('ETH-USDT')['price']))/0.01)
+while True:
+    try:
+        buyAmt = int((balance/(marketClient.get_ticker('ETH-USDT')['price']))/0.01)
+        break
+    except:
+        traceback.print_exc()
+        pass
 print(buyAmt*5)
