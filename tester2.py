@@ -118,10 +118,8 @@ class TestStrategy(bt.Strategy):
             positionStats.fees = positionStats.fees + ((positionStats.capital * leverage)/100)*0.06
             print('--------------------')
             self.log('BUY')
-            print(price_current)
             print(currentPosition.buyPrice)
-            print(price_volume)
-            print(ema_200_current, sma_9_current, sma_9_trailing, rsi_k_current, rsi_k_trailing)
+            print(price_current)
             print('--------------------')
             self.buy()
 
@@ -142,7 +140,7 @@ class TestStrategy(bt.Strategy):
                 positionStats.fees = positionStats.fees + (((positionStats.capital * leverage) - stoploss)/100)*0.06
                 positionStats.capital = positionStats.capital - currentFee
                 print(currentPosition.buyPrice - stoploss)
-            print(price_volume)
+            print(price_current)
             currentPosition.inPosition = False
             currentPosition.buyPrice = 0
             positionCooldown = True
