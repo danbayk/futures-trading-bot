@@ -31,7 +31,7 @@ userClient = User(api_key, api_secret, api_passphrase)
 
 # User-modified parameters, default is best for ETH-USDT 30m trading
 takeProfit = 20
-stopLoss = 10
+stopLoss = 5
 leverage = 5
 
 # Current position details
@@ -58,12 +58,12 @@ if(len(tradeClient.get_all_position()) == 1):
 
 # Buy conditions
 def kupward(rsi_k_current, rsi_k_trailing, rsi_d_current):
-    return (((rsi_k_current - rsi_k_trailing) > 0.05) and 
+    return (((rsi_k_current - rsi_k_trailing) > 0.04) and 
             (rsi_k_current > rsi_d_current) and 
             (rsi_k_current > 0.5))
 
 def smaupward(sma_9_current, sma_9_trailing):
-    return (sma_9_current - sma_9_trailing) > 0.7
+    return (sma_9_current - sma_9_trailing) > 1.5
 
 def priceup(price_current, ema_200_current, sma_9_current):
     # return ((price_current > ema_200_current) and 
