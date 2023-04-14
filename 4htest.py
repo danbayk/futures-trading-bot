@@ -8,24 +8,26 @@ import random
 import datetime
 
 #1h TP: 25, SL: 15
-#30m TP: 20 SL: 10
+#30m TP: 25 SL: 5 0.04 and 1.5 
 # Variable values for testing
 
 # Interchange with any chart with the same column format
 chart = 'kucoin4h.csv'
+# chart = 'charts/largeDataSetETH.csv'
 # Starting capital
 initialCapital = 1000
 # Set take profit (dollars)
-takeprofit = 30
+takeprofit = 35
 # Set stop loss (dollars)
-stoploss = 15
+stoploss = 10
 # Futures leverage amount (ex. '5' --> 5x leverage)
 leverage = 5
 
 cerebro = bt.Cerebro()
 feed = GenericCSVData(dataname=chart,
                       dtformat = ('%m/%d/%Y'),
-                      # fromdate = datetime.datetime(2023, 1, 5),
+                      # dtformat = ('%Y-%m-%d'),
+                      fromdate = datetime.datetime(2022, 10, 5),
                       date = 0,
                       open = 1,
                       high = 2,
@@ -95,48 +97,53 @@ class TestStrategy(bt.Strategy):
 
         # Buying conditions
         def kupward():
-            return (((rsi_k_current - rsi_k_trailing) > 0.05) and (rsi_k_current > rsi_d_current) and (rsi_k_current > 0.5))
+            return (((rsi_k_current - rsi_k_trailing) > 0.04) and (rsi_k_current > rsi_d_current) and (rsi_k_current > 0.5))
 
         def smaupward():
-            return (sma_9_current - sma_9_trailing) > 10
+            return (sma_9_current - sma_9_trailing) > 1.5
 
         def priceup():
+            # return ((price_current > ema_200_current) and (price_current > sma_9_current) and (sma_9_current > ema_200_current))
             return ((price_current > sma_9_current))
 
         if(kupward() and smaupward() and priceup() and currentPosition.inPosition == False):
             currentPosition.inPosition = True
-            currentPosition.buyPrice = (price_current_open + price_previous_open)/2
+            currentPosition.buyPrice = price_current_open
             # if(int(price_current_open) > int(price_previous_open)):
             #     currentPosition.buyPrice = random.randrange(int(price_previous_open), int(price_current_open))
             # elif(int(price_current_open) < int(price_previous_open)):
             #     currentPosition.buyPrice = random.randrange(int(price_current_open), int(price_previous_open))
             # else:
             #     currentPosition.buyPrice = (price_current_open + price_previous_open)/2
-            positionStats.fees = positionStats.fees + ((positionStats.capital * leverage)/100)*0.06
+            # positionStats.fees = positionStats.fees + ((positionStats.capital * leverage)/100)*0.06
             print('--------------------')
             self.log('BUY')
             print(currentPosition.buyPrice)
-            print(price_volume)
-            print(ema_200_current, sma_9_current, sma_9_trailing, rsi_k_current, rsi_k_trailing)
+            print(price_current)
             print('--------------------')
+            print('FIX 4h CHART TIMESTAMPS')
             self.buy()
 
+        lossStop = sma_9_current
         # Option to sell on buy tick
-        if(((price_current_high > (currentPosition.buyPrice + takeprofit)) or (price_current_low < (currentPosition.buyPrice - stoploss))) and currentPosition.inPosition == True):
+        if(((price_current_high > (currentPosition.buyPrice + takeprofit)) or (price_current_low < lossStop)) and currentPosition.inPosition == True):
             self.log('SELL')
             # Win
             if(price_current_high > (currentPosition.buyPrice + takeprofit)):
                 positionStats.wins += 1
-                positionStats.capital = positionStats.capital + ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice + takeprofit)) - (positionStats.capital * leverage))
+                feeWin = ((((positionStats.capital * leverage) + takeprofit)/100)*0.06) * 2
+                positionStats.capital = positionStats.capital + (((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice + takeprofit)) - (positionStats.capital * leverage)) - feeWin)
                 positionStats.fees = positionStats.fees + (((positionStats.capital * leverage) + takeprofit)/100)*0.06
                 print(currentPosition.buyPrice + takeprofit)
             # Loss
-            elif(price_current_low < (currentPosition.buyPrice - stoploss)):
+            elif(price_current_low < lossStop):
                 positionStats.losses += 1
-                positionStats.capital = positionStats.capital = positionStats.capital + ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice - stoploss)) - (positionStats.capital * leverage))
-                positionStats.fees = positionStats.fees + (((positionStats.capital * leverage) - stoploss)/100)*0.06
-                print(currentPosition.buyPrice - stoploss)
-            print(price_volume)
+                feeLoss = (((lossStop)/100)*0.06) * 2
+                positionStats.capital = ((positionStats.capital + ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(lossStop)) - (positionStats.capital * leverage))) - feeLoss)
+                positionStats.fees = positionStats.fees + (lossStop/100)*0.06
+                print(lossStop)
+
+            print(price_current)
             currentPosition.inPosition = False
             currentPosition.buyPrice = 0
             positionCooldown = True
@@ -169,6 +176,6 @@ print('Fees:')
 print(positionStats.fees)
 print('--------------------')
 print('Final profit:')
-print(floor((positionStats.capital - positionStats.startingCapital) - positionStats.fees))
+print(floor((positionStats.capital - positionStats.startingCapital)))
 print('--------------------')
 # cerebro.plot()

@@ -17,7 +17,7 @@ chart = 'september-to-april-kucoin-30m-final-v2.csv'
 # Starting capital
 initialCapital = 1000
 # Set take profit (dollars)
-takeprofit = 25
+takeprofit = 10
 # Set stop loss (dollars)
 stoploss = 5
 # Futures leverage amount (ex. '5' --> 5x leverage)
