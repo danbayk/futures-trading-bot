@@ -9,6 +9,7 @@ import datetime
 
 #1h TP: 25, SL: 15
 #30m TP: 25 SL: 5 0.04 and 1.5 
+#4h TP: 30 SL: previous low 1.5 SMA 0.05 RSI k
 # Variable values for testing
 
 # Interchange with any chart with the same column format
@@ -17,7 +18,7 @@ chart = 'kucoin4h.csv'
 # Starting capital
 initialCapital = 1000
 # Set take profit (dollars)
-takeprofit = 35
+takeprofit = 15
 # Set stop loss (dollars)
 stoploss = 10
 # Futures leverage amount (ex. '5' --> 5x leverage)
@@ -38,6 +39,7 @@ feed = GenericCSVData(dataname=chart,
 
 df = pd.DataFrame(columns=['close'])
 df_open = pd.DataFrame(columns=['open'])
+df_low = pd.DataFrame(columns=['low'])
 
 # Separate dataframe for indicators, only difference is the price for calculation is the high not the close to include all buys that will occur live
 df_for_indicators = pd.DataFrame(columns=['close'])
@@ -71,6 +73,7 @@ class TestStrategy(bt.Strategy):
     def next(self):
         global positionStats
         df.loc[len(df.index)] = [self.dataclose[0]]
+        df_low.loc[len(df_low.index)] = [self.datalow[0]]
         if(len(df_for_indicators) == 0 or len(df_for_indicators) == 1):
             df_for_indicators.loc[len(df_for_indicators.index)] = [self.dataclose[0]]
         else:
@@ -81,6 +84,7 @@ class TestStrategy(bt.Strategy):
         df_open.loc[len(df_open.index)] = [self.dataopen[0]]
         price_current = pd.to_numeric(df['close'])[len(df) - 1]
         price_previous_open = pd.to_numeric(df_open['open'])[0 if len(df) == 1 else len(df) - 2]
+        price_previous_low = pd.to_numeric(df_low['low'])[0 if len(df_low) == 1 else len(df_low) - 2]
         ema_200_current = ema_indicator(pd.to_numeric(df['close']), 200, False)[0 if len(df) == 1 else len(df) - 2]
         if(price_current < ema_200_current):
             return
@@ -97,7 +101,7 @@ class TestStrategy(bt.Strategy):
 
         # Buying conditions
         def kupward():
-            return (((rsi_k_current - rsi_k_trailing) > 0.04) and (rsi_k_current > rsi_d_current) and (rsi_k_current > 0.5))
+            return (((rsi_k_current - rsi_k_trailing) > 0.05) and (rsi_k_current > rsi_d_current) and (rsi_k_current > 0.5))
 
         def smaupward():
             return (sma_9_current - sma_9_trailing) > 1.5
@@ -121,12 +125,11 @@ class TestStrategy(bt.Strategy):
             print(currentPosition.buyPrice)
             print(price_current)
             print('--------------------')
-            print('FIX 4h CHART TIMESTAMPS')
             self.buy()
 
         lossStop = sma_9_current
         # Option to sell on buy tick
-        if(((price_current_high > (currentPosition.buyPrice + takeprofit)) or (price_current_low < lossStop)) and currentPosition.inPosition == True):
+        if(((price_current_high > (currentPosition.buyPrice + takeprofit)) or (price_current < lossStop)) and currentPosition.inPosition == True):
             self.log('SELL')
             # Win
             if(price_current_high > (currentPosition.buyPrice + takeprofit)):
@@ -136,10 +139,13 @@ class TestStrategy(bt.Strategy):
                 positionStats.fees = positionStats.fees + (((positionStats.capital * leverage) + takeprofit)/100)*0.06
                 print(currentPosition.buyPrice + takeprofit)
             # Loss
-            elif(price_current_low < lossStop):
+            elif(price_current < lossStop):
                 positionStats.losses += 1
+                # Fee calculation --> closing price / 100 * 0.06 (maker fee) * 2 (fee taken on buy and sell)
                 feeLoss = (((lossStop)/100)*0.06) * 2
+                # Post trade capital calculation --> capital + ((capital * leverage) / buy price in ETH) * sell price in ETH - (initial capital * leverage) - fee for both buy/sell 
                 positionStats.capital = ((positionStats.capital + ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(lossStop)) - (positionStats.capital * leverage))) - feeLoss)
+                # Add fees to running count
                 positionStats.fees = positionStats.fees + (lossStop/100)*0.06
                 print(lossStop)
 

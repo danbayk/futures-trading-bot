@@ -54,21 +54,17 @@ if(len(tradeClient.get_all_position()) == 1):
             traceback.print_exc()
             pass
     currentPosition.TP = currentPosition.buyPrice + takeProfit
-    currentPosition.SL = currentPosition.buyPrice - stopLoss
 
 # Buy conditions
 def kupward(rsi_k_current, rsi_k_trailing, rsi_d_current):
-    return (((rsi_k_current - rsi_k_trailing) > 0.04) and 
+    return (((rsi_k_current - rsi_k_trailing) > 0.05) and 
             (rsi_k_current > rsi_d_current) and 
             (rsi_k_current > 0.5))
 
 def smaupward(sma_9_current, sma_9_trailing):
     return (sma_9_current - sma_9_trailing) > 1.5
 
-def priceup(price_current, ema_200_current, sma_9_current):
-    # return ((price_current > ema_200_current) and 
-    #         (price_current > sma_9_current) and 
-    #         (sma_9_current > ema_200_current))
+def priceup(price_current, sma_9_current):
     return (price_current > sma_9_current)
 
 # Execute a buy
@@ -101,7 +97,6 @@ def executeBuy():
             traceback.print_exc()
             pass
     currentPosition.TP = currentPosition.buyPrice + takeProfit
-    currentPosition.SL = currentPosition.buyPrice - stopLoss
 
 # Execute a sell
 def executeSell():
@@ -123,7 +118,7 @@ while True:
         try:
             # Request large enough data set for accurate indicators and create dataframe
             df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
-                                            '30min', 
+                                            '4hour', 
                                             round(datetime(2023, 3, 5).replace(tzinfo=timezone.utc).timestamp()), 
                                             round(time.time())), 
                                             columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
@@ -143,6 +138,9 @@ while True:
     rsi_d_current = stochrsi_d(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[0]
     rsi_k_trailing = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[1]
 
+    # Update stop loss to sma value
+    currentPosition.SL = sma_9_current
+
     # Buying conditions
     if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and
         smaupward(sma_9_current, sma_9_trailing) and 
@@ -158,7 +156,7 @@ while True:
 
     print(df)
     print(price_current)
-    print(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupward(sma_9_current, sma_9_trailing), priceup(price_current, ema_200_current, sma_9_current))
+    print(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupward(sma_9_current, sma_9_trailing), priceup(price_current, sma_9_current))
     print(ema_200_current, sma_9_current, rsi_k_current, rsi_k_trailing)
     if(currentPosition.inPosition == True):
         print("---IN POSITION---")
