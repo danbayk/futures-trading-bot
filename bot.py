@@ -32,7 +32,7 @@ userClient = User(api_key, api_secret, api_passphrase)
 # User-modified parameters, default is best for ETH-USDT 30m trading
 takeProfit = 20
 stopLoss = 5
-leverage = 5
+leverage = 1
 
 # Current position details
 class currentPosition:
@@ -53,7 +53,7 @@ if(len(tradeClient.get_all_position()) == 1):
             time.sleep(1)
             traceback.print_exc()
             pass
-    currentPosition.TP = currentPosition.buyPrice + takeProfit
+    # currentPosition.TP = currentPosition.buyPrice + takeProfit
 
 # Buy conditions
 def kupward(rsi_k_current, rsi_k_trailing, rsi_d_current):
@@ -77,7 +77,7 @@ def executeBuy():
             # Get buy amount in lots (0.01 ETH) * leverage
             buyAmt = int((balance/float(currentPrice))/0.01) * leverage
             # Place a ETH-USDT market order with calculated parameters
-            tradeClient.create_market_order('ETHUSDTM', 'buy', '5', 'UUID', size=buyAmt)
+            tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=buyAmt)
             currentPosition.amtLots = buyAmt
             break
         except:
@@ -96,13 +96,13 @@ def executeBuy():
             time.sleep(11)
             traceback.print_exc()
             pass
-    currentPosition.TP = currentPosition.buyPrice + takeProfit
+    # currentPosition.TP = currentPosition.buyPrice + takeProfit
 
 # Execute a sell
 def executeSell():
     while True:
         try:
-            tradeClient.create_market_order('ETHUSDTM', 'sell', '5', 'UUID', size=currentPosition.amtLots)
+            tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=currentPosition.amtLots)
             break
         except:
             time.sleep(1)
@@ -150,7 +150,7 @@ while True:
         executeBuy()
 
     # Selling conditions, can sell on the same tick as buy
-    if((price_current > currentPosition.TP or price_current < currentPosition.SL) and currentPosition.inPosition == True):
+    if(rsi_k_trailing - rsi_k_current > 0 and currentPosition.inPosition == True):
         # Execute a sell
         executeSell()
 
