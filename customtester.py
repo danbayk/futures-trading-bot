@@ -56,7 +56,6 @@ for row in BD.iterrows():
         rsi_k_current = stochrsi_k(pd.to_numeric(DF['close']), 14, 3, 3, True)[len(DF) - 1]
         rsi_d_current = stochrsi_d(pd.to_numeric(DF['close']), 14, 3, 3, True)[len(DF) - 1]
         rsi_k_trailing = stochrsi_k(pd.to_numeric(DF['close']), 14, 3, 3, True)[0 if len(DF) == 1 else len(DF) - 2]
-
         if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and 
            smaupward(sma_9_current, sma_9_trailing) and
            priceup(price_current, sma_9_current) and 
@@ -64,6 +63,8 @@ for row in BD.iterrows():
             currentPosition.inPosition = True
             currentPosition.buyPrice = price_current
             print('--------------------')
+            print('date:')
+            print(DF['timestamp'][len(DF) - 1])
             print('buy price: ')
             print(currentPosition.buyPrice)
             print('--------------------')
@@ -76,6 +77,8 @@ for row in BD.iterrows():
             fee = ((((positionStats.capital * leverage))/100)*0.06) * 2
             profit = (((positionStats.capital * leverage)/currentPosition.buyPrice)*(price_current)) - ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice))) - fee
             positionStats.capital = positionStats.capital + ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(price_current)) - ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice))) - fee)
+            print('date:')
+            print(DF['timestamp'][len(DF) - 1])
             print('sell price:')
             print(price_current)
             print('profit:')
