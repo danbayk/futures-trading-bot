@@ -87,8 +87,6 @@ class TestStrategy(bt.Strategy):
         price_previous_open = pd.to_numeric(df_open['open'])[0 if len(df) == 1 else len(df) - 2]
         price_previous_low = pd.to_numeric(df_low['low'])[0 if len(df_low) == 1 else len(df_low) - 2]
         ema_200_current = ema_indicator(pd.to_numeric(df['close']), 200, False)[len(df) - 1]
-        if(price_current < ema_200_current):
-            return
         price_current_high = self.datahigh[0]
         price_current_open = self.dataopen[0]
         price_current_low = self.datalow[0]
