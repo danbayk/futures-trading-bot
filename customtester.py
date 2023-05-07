@@ -1,12 +1,12 @@
 import pandas as pd
 from ta.trend import ema_indicator
 from ta.momentum import stochrsi_k, stochrsi_d
-from math import floor
+import math
 
 # User modified variables, make sure to set interval correctly
 basefile = '4hour.csv'
 suppfile = '1min.csv'
-# Hourly base dataframe time interval. ex. 1 --> 1hour, 2 --> 2hour, 4 --> 4hour etc.
+# Hourly base dataframe time interval. ex. 0.5 --> 30min, 1 --> 1hour, 4 --> 4hour etc.
 interval = 4
 # Futures leverage amount (ex. '5' --> 5x leverage)
 leverage = 5
@@ -28,12 +28,12 @@ class currentPosition:
 
 # Buy conditions
 def kupward(rsi_k_current, rsi_k_trailing, rsi_d_current):
-    return (((rsi_k_current - rsi_k_trailing) > 0.05) and 
+    return (((rsi_k_current - rsi_k_trailing) > 0.7) and 
             (rsi_k_current > rsi_d_current) and 
             (rsi_k_current > 0.5))
 
 def smaupward(sma_9_current, sma_9_trailing):
-    return (sma_9_current - sma_9_trailing) > 1.5
+    return (sma_9_current - sma_9_trailing) > 3
 
 def priceup(price_current, sma_9_current):
     return (price_current > sma_9_current)
@@ -51,11 +51,18 @@ for row in BD.iterrows():
     for y in range(int(startpos), int(endpos)):
         DF.at[i, 'close'] = SD.loc[y:y]["close"]
         price_current = pd.to_numeric(DF['close'])[len(DF) - 1]
+        ema_200_current = ema_indicator(pd.to_numeric(DF['close']), 200, False)[len(DF) - 1]
         sma_9_current = ema_indicator(pd.to_numeric(DF['close']), 17, False)[len(DF) - 1]
         sma_9_trailing = ema_indicator(pd.to_numeric(DF['close']), 17, False)[0 if len(DF) == 1 else len(DF) - 2]
-        rsi_k_current = stochrsi_k(pd.to_numeric(DF['close']), 14, 3, 3, True)[len(DF) - 1]
-        rsi_d_current = stochrsi_d(pd.to_numeric(DF['close']), 14, 3, 3, True)[len(DF) - 1]
-        rsi_k_trailing = stochrsi_k(pd.to_numeric(DF['close']), 14, 3, 3, True)[0 if len(DF) == 1 else len(DF) - 2]
+        rsi_k_current = stochrsi_k(pd.to_numeric(DF['close']), 14, 3, 3, False)[len(DF) - 1]
+        rsi_d_current = stochrsi_d(pd.to_numeric(DF['close']), 14, 3, 3, False)[len(DF) - 1]
+        rsi_k_trailing = stochrsi_k(pd.to_numeric(DF['close']), 14, 3, 3, False)[0 if len(DF) == 1 else len(DF) - 2]
+
+        if(math.isnan(sma_9_current) or math.isnan(rsi_k_current) or math.isnan(ema_200_current)):
+            continue
+        if(price_current < ema_200_current):
+            continue
+
         if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and 
            smaupward(sma_9_current, sma_9_trailing) and
            priceup(price_current, sma_9_current) and 
@@ -64,11 +71,12 @@ for row in BD.iterrows():
             currentPosition.buyPrice = price_current
             print('--------------------')
             print('date:')
-            print(DF['timestamp'][len(DF) - 1])
+            print(DF['timestamp'][len(DF) - 1], DF['open'][len(DF) - 1])
             print('buy price: ')
             print(currentPosition.buyPrice)
             print('--------------------')
-        
+
+        # (price_current > currentPosition.buyPrice + 25 or price_current < currentPosition.buyPrice - 5)
         if(rsi_k_trailing - rsi_k_current > 0 and currentPosition.inPosition == True):
             if(currentPosition.buyPrice < price_current):
                 positionStats.wins += 1
@@ -78,7 +86,7 @@ for row in BD.iterrows():
             profit = (((positionStats.capital * leverage)/currentPosition.buyPrice)*(price_current)) - ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice))) - fee
             positionStats.capital = positionStats.capital + ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(price_current)) - ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice))) - fee)
             print('date:')
-            print(DF['timestamp'][len(DF) - 1])
+            print(DF['timestamp'][len(DF) - 1], DF['open'][len(DF) - 1])
             print('sell price:')
             print(price_current)
             print('profit:')

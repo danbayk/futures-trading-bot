@@ -14,21 +14,21 @@ import datetime
 # Variable values for testing
 
 # Interchange with any chart with the same column format
-chart = 'charts/kucoin4h.csv'
+chart = 'charts/ETHUST30test.csv'
 # chart = 'charts/largeDataSetETH.csv'
 # Starting capital
 initialCapital = 1000
 # Set take profit (dollars)
-takeprofit = 15
+takeprofit = 25
 # Set stop loss (dollars)
-stoploss = 10
+stoploss = 5
 # Futures leverage amount (ex. '5' --> 5x leverage)
 leverage = 5
 
 cerebro = bt.Cerebro()
 feed = GenericCSVData(dataname=chart,
-                      dtformat = ('%m/%d/%Y'),
-                      # dtformat = ('%Y-%m-%d'),
+                      # dtformat = ('%m/%d/%Y'),
+                      dtformat = ('%Y-%m-%d'),
                       fromdate = datetime.datetime(2022, 1, 5),
                       date = 0,
                       open = 1,
