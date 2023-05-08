@@ -144,7 +144,7 @@ while True:
     # Buying conditions
     if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and
         smaupward(sma_9_current, sma_9_trailing) and 
-        priceup(price_current, ema_200_current, sma_9_current) and
+        priceup(price_current, sma_9_current) and
         currentPosition.inPosition == False and 
         frameLen != len(df)):
         # Execute a buy
