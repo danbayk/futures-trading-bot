@@ -62,7 +62,7 @@ def kupward(rsi_k_current, rsi_k_trailing, rsi_d_current):
             (rsi_k_current > 0.5))
 
 def smaupward(sma_9_current, sma_9_trailing):
-    return (sma_9_current - sma_9_trailing) > 1.5
+    return (sma_9_current - sma_9_trailing) > 5
 
 def priceup(price_current, sma_9_current):
     return (price_current > sma_9_current)
@@ -122,13 +122,13 @@ while True:
                                             round(datetime(2023, 3, 5).replace(tzinfo=timezone.utc).timestamp()), 
                                             round(time.time())), 
                                             columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
+            frameLen = len(df)
             break
         except:
             time.sleep(11)
             traceback.print_exc()
             pass
     
-
     # Indicators
     price_current = pd.to_numeric(df.iloc[::-1]['close'])[0]
     ema_200_current = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 200, False)[0]
@@ -145,12 +145,13 @@ while True:
     if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and
         smaupward(sma_9_current, sma_9_trailing) and 
         priceup(price_current, ema_200_current, sma_9_current) and
-        currentPosition.inPosition == False):
+        currentPosition.inPosition == False and 
+        frameLen != len(df)):
         # Execute a buy
         executeBuy()
 
     # Selling conditions, can sell on the same tick as buy
-    if(rsi_k_trailing - rsi_k_current > 0 and currentPosition.inPosition == True):
+    if(rsi_k_trailing - rsi_k_current > 0 and currentPosition.inPosition == True and frameLen != len(df)):
         # Execute a sell
         executeSell()
 
@@ -160,5 +161,5 @@ while True:
     print(ema_200_current, sma_9_current, rsi_k_current, rsi_k_trailing)
     if(currentPosition.inPosition == True):
         print("---IN POSITION---")
-        print(currentPosition.buyPrice, currentPosition.TP, currentPosition.SL)
+        print(currentPosition.buyPrice)
     time.sleep(5)

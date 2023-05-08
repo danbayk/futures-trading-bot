@@ -47,4 +47,4 @@ def getMinuteData(start_date, end_date, timeframe, outputfile):
 
     runningFrame.to_csv(outputfile)
 
-getMinuteData(datetime(2023, 1, 1), datetime(2023, 5, 1), '30min', '30min.csv')
+getMinuteData(datetime(2022, 8, 1), datetime(2023, 5, 1), '4hour', '4hour.csv')
