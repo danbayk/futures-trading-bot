@@ -14,29 +14,41 @@ leverage = 5
 BD = pd.read_csv(basefile)
 SD = pd.read_csv(suppfile)
 
+cntLONGS = 0
+cntSHORTS = 0
+
 # Overall statistics
 class positionStats:
     capital = 1000
     wins = 0
     losses = 0
-    fees = 0
 
 # Track current position
 class currentPosition:
-    inPosition = False
-    buyPrice = 0
+    inPositionLONG = False
+    inPositionSHORT = False
+    buyPriceLONG = 0
+    buyPriceSHORT = 0
 
 # Buy conditions
-def kupward(rsi_k_current, rsi_k_trailing, rsi_d_current):
+def kupwardLONG(rsi_k_current, rsi_k_trailing, rsi_d_current):
     return (((rsi_k_current - rsi_k_trailing) > 0.05) and 
             (rsi_k_current > rsi_d_current) and 
             (rsi_k_current > 0.5))
+def kupwardSHORT(rsi_k_current, rsi_k_trailing, rsi_d_current):
+    return (((rsi_k_trailing - rsi_k_current) > 0.05) and 
+            (rsi_k_current < rsi_d_current) and 
+            (rsi_k_current < 0.5))
 
-def smaupward(sma_9_current, sma_9_trailing):
-    return (sma_9_current - sma_9_trailing) > 5
+def smaupwardLONG(sma_9_current, sma_9_trailing):
+    return (sma_9_current - sma_9_trailing) > 4
+def smaupwardSHORT(sma_9_current, sma_9_trailing):
+    return (sma_9_trailing - sma_9_current) > 4
 
-def priceup(price_current, sma_9_current):
+def priceupLONG(price_current, sma_9_current):
     return (price_current > sma_9_current)
+def priceupSHORT(price_current, sma_9_current):
+    return (price_current < sma_9_current)
 
 DF = pd.DataFrame(columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
 
@@ -63,28 +75,40 @@ for row in BD.iterrows():
         i += 1
         continue
 
-    if(kupward(rsi_k_current, rsi_k_trailing, rsi_d_current) and 
-        smaupward(sma_9_current, sma_9_trailing) and
-        priceup(price_current, sma_9_current) and 
-        currentPosition.inPosition == False):
-        currentPosition.inPosition = True
-        currentPosition.buyPrice = price_current
+    # LONG BUY
+    if(kupwardLONG(rsi_k_current, rsi_k_trailing, rsi_d_current) and 
+        smaupwardLONG(sma_9_current, sma_9_trailing) and
+        priceupLONG(price_current, sma_9_current) and 
+        currentPosition.inPositionLONG == False):
+        currentPosition.inPositionLONG = True
+        currentPosition.buyPriceLONG = price_current
         print('--------------------')
         print('date:')
         print(DF['timestamp'][len(DF) - 1], DF['open'][len(DF) - 1])
         print('buy price: ')
-        print(currentPosition.buyPrice)
+        print(currentPosition.buyPriceLONG)
+        print('--------------------')
+    
+    # SHORT BUY
+    if(kupwardSHORT(rsi_k_current, rsi_k_trailing, rsi_d_current) and 
+        smaupwardSHORT(sma_9_current, sma_9_trailing) and
+        priceupSHORT(price_current, sma_9_current) and 
+        currentPosition.inPositionSHORT == False):
+        currentPosition.inPositionSHORT = True
+        currentPosition.buyPriceSHORT = price_current
+        print('--------------------')
+        print('date:')
+        print(DF['timestamp'][len(DF) - 1], DF['open'][len(DF) - 1])
+        print('buy price: ')
+        print(currentPosition.buyPriceSHORT)
         print('--------------------')
 
-    # (price_current > currentPosition.buyPrice + 25 or price_current < currentPosition.buyPrice - 5)
-    if(rsi_k_trailing - rsi_k_current > 0 and currentPosition.inPosition == True):
-        if(currentPosition.buyPrice < price_current):
-            positionStats.wins += 1
-        elif(currentPosition.buyPrice > price_current):
-            positionStats.losses += 1
+    # LONG SELL
+    if(rsi_k_trailing - rsi_k_current > 0 and currentPosition.inPositionLONG == True):
         fee = ((((positionStats.capital * leverage))/100)*0.06) * 2
-        profit = (((positionStats.capital * leverage)/currentPosition.buyPrice)*(price_current)) - ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice))) - fee
-        positionStats.capital = positionStats.capital + ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(price_current)) - ((((positionStats.capital * leverage)/currentPosition.buyPrice)*(currentPosition.buyPrice))) - fee)
+        profit = (((positionStats.capital * leverage)/currentPosition.buyPriceLONG)*(price_current)) - ((((positionStats.capital * leverage)/currentPosition.buyPriceLONG)*(currentPosition.buyPriceLONG))) - fee
+        positionStats.capital = positionStats.capital + profit
+        print('LONG')
         print('date:')
         print(DF['timestamp'][len(DF) - 1], DF['open'][len(DF) - 1])
         print('sell price:')
@@ -93,8 +117,30 @@ for row in BD.iterrows():
         print(profit)
         print('captial')
         print(positionStats.capital)
-        currentPosition.inPosition = False
-        currentPosition.buyPrice = 0
+        currentPosition.inPositionLONG = False
+        currentPosition.buyPriceLONG = 0
+        cntLONGS += 1
+
+    # SHORT SELL
+    if(rsi_k_current - rsi_k_trailing > 0 and currentPosition.inPositionSHORT == True):
+        fee = ((((positionStats.capital * leverage))/100)*0.06) * 2
+        profit = ((((positionStats.capital * leverage)/currentPosition.buyPriceSHORT)*(price_current)) - ((((positionStats.capital * leverage)/currentPosition.buyPriceSHORT)*(currentPosition.buyPriceSHORT))) - fee)
+        if(profit < 0):
+            positionStats.capital = positionStats.capital + abs(profit)
+        elif(profit > 0):
+            positionStats.capital = positionStats.capital - abs(profit)
+        print('SHORT')
+        print('date:')
+        print(DF['timestamp'][len(DF) - 1], DF['open'][len(DF) - 1])
+        print('sell price:')
+        print(price_current)
+        print('profit:')
+        print(profit)
+        print('captial')
+        print(positionStats.capital)
+        currentPosition.inPositionSHORT = False
+        currentPosition.buyPriceSHORT = 0
+        cntSHORTS += 1
 
     # for y in range(int(startpos), int(endpos)):
     #     DF.at[i, 'close'] = SD.loc[y:y]["close"]
@@ -148,4 +194,4 @@ for row in BD.iterrows():
     endpos += addInterval
     i += 1
 
-print(DF)
+print(cntLONGS, cntSHORTS)

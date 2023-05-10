@@ -28,11 +28,22 @@ tradeClient = Trade(key = api_key, secret = api_secret, passphrase = api_passphr
 userClient = User(api_key, api_secret, api_passphrase)
 
 balance = userClient.get_account_overview('USDT')['availableBalance']
+frameLen = 0
 while True:
-    try:
-        buyAmt = int((balance/(marketClient.get_ticker('ETH-USDT')['price']))/0.01)
-        break
-    except:
-        traceback.print_exc()
-        pass
-print(buyAmt*5)
+    while True:
+        try:
+            # Request large enough data set for accurate indicators and create dataframe
+            df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
+                                            '1min', 
+                                            round(datetime(2023, 5, 10).replace(tzinfo=timezone.utc).timestamp()), 
+                                            round(time.time())), 
+                                            columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
+            break
+        except:
+            time.sleep(11)
+            traceback.print_exc()
+            pass
+    print(frameLen, len(df))
+    print((frameLen != len(df) and frameLen != 0))
+    frameLen = len(df)
+    time.sleep(5)
