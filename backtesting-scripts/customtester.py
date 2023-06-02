@@ -4,8 +4,8 @@ from ta.momentum import stochrsi_k, stochrsi_d
 import math
 
 # User modified variables, make sure to set interval correctly
-basefile = '4hour.csv'
-suppfile = '1min.csv'
+basefile = 'charts/ETH4h.csv'
+suppfile = 'charts/ETH1min.csv'
 # Hourly base dataframe time interval. ex. 0.5 --> 30min, 1 --> 1hour, 4 --> 4hour etc.
 interval = 4
 # Futures leverage amount (ex. '5' --> 5x leverage)
@@ -60,6 +60,7 @@ endpos = addInterval
 
 for row in BD.iterrows():
     DF = pd.concat([DF, BD.loc[i:i]])
+    DF.at[i, 'close'] = DF['open'][len(DF) - 1]
     price_current = pd.to_numeric(DF['close'])[len(DF) - 1]
     ema_200_current = ema_indicator(pd.to_numeric(DF['close']), 200, False)[len(DF) - 1]
     sma_9_current = ema_indicator(pd.to_numeric(DF['close']), 17, False)[len(DF) - 1]
@@ -69,9 +70,11 @@ for row in BD.iterrows():
     rsi_k_trailing = stochrsi_k(pd.to_numeric(DF['close']), 14, 3, 3, False)[0 if len(DF) == 1 else len(DF) - 2]
 
     if(math.isnan(sma_9_current) or math.isnan(rsi_k_current) or math.isnan(ema_200_current)):
+        DF.at[i, 'close'] = BD.loc[i:i]["close"]
         i += 1
         continue
     if(price_current < ema_200_current):
+        DF.at[i, 'close'] = BD.loc[i:i]["close"]
         i += 1
         continue
 
@@ -141,7 +144,7 @@ for row in BD.iterrows():
         currentPosition.inPositionSHORT = False
         currentPosition.buyPriceSHORT = 0
         cntSHORTS += 1
-
+    DF.at[i, 'close'] = DF['close'][len(DF) - 1]
     # for y in range(int(startpos), int(endpos)):
     #     DF.at[i, 'close'] = SD.loc[y:y]["close"]
     #     price_current = pd.to_numeric(DF['close'])[len(DF) - 1]
