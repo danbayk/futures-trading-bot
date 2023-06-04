@@ -5,7 +5,7 @@ from ta.trend import MACD
 import math
 
 # User modified variables, make sure to set interval correctly
-basefile = '4htest.csv'
+basefile = 'charts/ETH4hlong.csv'
 suppfile = 'charts/ETH1min.csv'
 # Hourly base dataframe time interval. ex. 0.5 --> 30min, 1 --> 1hour, 4 --> 4hour etc.
 interval = 0.5
@@ -51,15 +51,21 @@ for row in BD.iterrows():
     macd_signal_line = macd.macd_signal()[len(DF) - 1]
     macd_signal_line_trailing = macd.macd_signal()[0 if len(DF) == 1 else len(DF) - 2]
     
-    def kupward():
-            return (((rsi_k_current - rsi_k_trailing) > 0.05) and (rsi_k_current > rsi_d_current) and (rsi_k_current > 0.5))
+    def kupwardLONG():
+        return (((rsi_k_current - rsi_k_trailing) > 0.05) and (rsi_k_current > rsi_d_current) and (rsi_k_current > 0.5))
+    def kupwardSHORT():
+        return (((rsi_k_trailing - rsi_k_current) > 0.05) and (rsi_k_current < rsi_d_current) and (rsi_k_current < 0.5))
 
-    def smaupward():
+    def smaupwardLONG():
         return (sma_9_current - sma_9_trailing) > 1.5
-
-    def priceup():
+    def smaupwardSHORT():
+        return (sma_9_trailing - sma_9_current) > 1.5
+    
+    def priceupLONG():
         # return ((price_current > ema_200_current) and (price_current > sma_9_current) and (sma_9_current > ema_200_current))
         return ((price_current > sma_9_current))
+    def priceupSHORT():
+        return ((price_current < sma_9_current))
 
     if(math.isnan(sma_9_current) or math.isnan(rsi_k_current) or math.isnan(ema_200_current)):
         DF.at[i, 'close'] = BD.loc[i:i]["close"]
@@ -71,7 +77,7 @@ for row in BD.iterrows():
         continue
 
     # LONG BUY
-    if(kupward() and smaupward() and priceup() and currentPosition.inPositionLONG == False):
+    if(kupwardLONG() and smaupwardLONG() and priceupLONG() and currentPosition.inPositionLONG == False):
         currentPosition.inPositionLONG = True
         currentPosition.buyPriceLONG = price_current
         print('--------------------')
@@ -82,7 +88,7 @@ for row in BD.iterrows():
         print('--------------------')
 
     # SHORT BUY
-    if(kupward() == False and smaupward() == False and priceup() == False and currentPosition.inPositionSHORT == False):
+    if(kupwardSHORT() and smaupwardSHORT() and priceupSHORT() and currentPosition.inPositionSHORT == False):
         currentPosition.inPositionSHORT = True
         currentPosition.buyPriceSHORT = price_current
         print('--------------------')
@@ -100,7 +106,7 @@ for row in BD.iterrows():
         positionStats.capital = positionStats.capital + profit
         print('LONG')
         print('date:')
-        print(DF['timestamp'][len(DF) - 1], DF['open'][len(DF) - 1])
+        print(DF['timestamp'][len(DF) - 1], price_current)
         print('sell price:')
         print(price_current)
         print('profit:')
@@ -121,7 +127,7 @@ for row in BD.iterrows():
             positionStats.capital = positionStats.capital - abs(profit)
         print('SHORT')
         print('date:')
-        print(DF['timestamp'][len(DF) - 1], DF['open'][len(DF) - 1])
+        print(DF['timestamp'][len(DF) - 1], price_current)
         print('sell price:')
         print(price_current)
         print('profit:')

@@ -5,7 +5,7 @@ from ta.trend import MACD
 import math
 
 # User modified variables, make sure to set interval correctly
-basefile = '1htest.csv'
+basefile = 'charts/1htest.csv'
 suppfile = 'charts/ETH1min.csv'
 # Hourly base dataframe time interval. ex. 0.5 --> 30min, 1 --> 1hour, 4 --> 4hour etc.
 interval = 0.5

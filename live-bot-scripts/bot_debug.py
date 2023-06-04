@@ -35,7 +35,7 @@ while True:
             # Request large enough data set for accurate indicators and create dataframe
             df = pd.DataFrame(marketClient.get_kline_data('ETH-USDT', 
                                             '1min', 
-                                            round(datetime(2023, 5, 10).replace(tzinfo=timezone.utc).timestamp()), 
+                                            round(datetime(2023, 6, 4).replace(tzinfo=timezone.utc).timestamp()), 
                                             round(time.time())), 
                                             columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
             break

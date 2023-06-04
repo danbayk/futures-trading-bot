@@ -15,14 +15,14 @@ import os
 load_dotenv()
 
 # Market API, get candlesticks for indicators
-marketClient = Client(os.getenv('API_KEY'), os.getenv('API_SECRET'), os.getenv('API_PASSPHRASE'))
+marketClient = Client(os.getenv('API_KEY_FUTURES'), os.getenv('API_SECRET_FUTURES'), os.getenv('API_PASSPHRASE_FUTURES'))
 
 # ----- FUTURES API -----
 api_key = os.getenv('API_KEY_FUTURES')
 api_secret = os.getenv('API_SECRET_FUTURES')
 api_passphrase = os.getenv('API_PASSPHRASE_FUTURES')
 
-# Create trade and user endpoints
+# Create trade and user endpoints, used for executing futures trades and getting user account details
 tradeClient = Trade(key = api_key, secret = api_secret, passphrase = api_passphrase, is_sandbox = False)
 userClient = User(api_key, api_secret, api_passphrase)
 
@@ -58,9 +58,9 @@ def kupwardSHORT(rsi_k_current, rsi_k_trailing, rsi_d_current):
             (rsi_k_current < 0.5))
 
 def smaupwardLONG(sma_9_current, sma_9_trailing):
-    return (sma_9_current - sma_9_trailing) > 5
+    return (sma_9_current - sma_9_trailing) > 1.5
 def smaupwardSHORT(sma_9_current, sma_9_trailing):
-    return (sma_9_trailing - sma_9_current) > 5
+    return (sma_9_trailing - sma_9_current) > 1.5
 
 def priceupLONG(price_current, sma_9_current):
     return (price_current > sma_9_current)
@@ -77,7 +77,7 @@ def executeLONG():
             # Get buy amount in lots (0.01 ETH) * leverage
             buyAmt = int((balance/float(currentPrice))/0.01) * leverage
             # Place a ETH-USDT market order with calculated parameters
-            tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=buyAmt)
+            tradeClient.create_market_order('ETHUSDTM', 'buy', '1', 'UUID', size=1)
             currentPosition.amtLots = buyAmt
             break
         except:
@@ -101,7 +101,8 @@ def executeLONG():
 def executeSHORT():
     while True:
         try:
-            tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=currentPosition.amtLots)
+            # size=currentPosition.amtLots
+            tradeClient.create_market_order('ETHUSDTM', 'sell', '1', 'UUID', size=1)
             break
         except:
             time.sleep(1)
@@ -134,9 +135,9 @@ while True:
     ema_200_current = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 200, False)[0]
     sma_9_current = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 17, False)[0]
     sma_9_trailing = ema_indicator(pd.to_numeric(df.iloc[::-1]['close']), 17, False)[1]
-    rsi_k_current = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[0]
-    rsi_d_current = stochrsi_d(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[0]
-    rsi_k_trailing = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 3, 3, True)[1]
+    rsi_k_current = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 4, 4, True)[0]
+    rsi_d_current = stochrsi_d(pd.to_numeric(df.iloc[::-1]['close']), 14, 4, 4, True)[0]
+    rsi_k_trailing = stochrsi_k(pd.to_numeric(df.iloc[::-1]['close']), 14, 4, 4, True)[1]
 
     # Buying conditions
     if(kupwardLONG(rsi_k_current, rsi_k_trailing, rsi_d_current) and
