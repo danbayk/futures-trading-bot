@@ -10,11 +10,12 @@ load_dotenv()
 
 marketClient = Client(os.getenv('API_KEY'), os.getenv('API_SECRET'), os.getenv('API_PASSPHRASE'))
 
+# Convert provided dates to pandas compatible dates
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
-def getMinuteData(start_date, end_date, timeframe, outputfile):
+def generateChart(start_date, end_date, timeframe, outputfile):
     runningFrame = pd.DataFrame(columns=['timestamp', 'open', 'close', 'high', 'low', 'tx amt', 'tx vol'])
 
     startDay = start_date
@@ -47,4 +48,4 @@ def getMinuteData(start_date, end_date, timeframe, outputfile):
 
     runningFrame.to_csv(outputfile)
 
-getMinuteData(datetime(2022, 8, 1), datetime(2023, 5, 1), '4hour', '4hour.csv')
+generateChart(datetime(2022, 1, 1), datetime(2023, 6, 1), '4hour', '4htest.csv')

@@ -14,14 +14,14 @@ import datetime
 # Variable values for testing
 
 # Interchange with any chart with the same column format
-chart = 'charts/ETHUST30test.csv'
+chart = 'charts/ETH4h.csv'
 # chart = 'charts/largeDataSetETH.csv'
 # Starting capital
 initialCapital = 1000
 # Set take profit (dollars)
-takeprofit = 25
+takeprofit = 15
 # Set stop loss (dollars)
-stoploss = 5
+stoploss = 10
 # Futures leverage amount (ex. '5' --> 5x leverage)
 leverage = 5
 
