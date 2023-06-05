@@ -5,7 +5,7 @@ from ta.trend import MACD
 import math
 
 # User modified variables, make sure to set interval correctly
-basefile = 'charts/ETH4h.csv'
+basefile = 'charts/ETH4hlarge.csv'
 suppfile = 'charts/ETH1min.csv'
 # Hourly base dataframe time interval. ex. 0.5 --> 30min, 1 --> 1hour, 4 --> 4hour etc.
 interval = 0.5
@@ -51,6 +51,11 @@ for row in BD.iterrows():
     macd_signal_line = macd.macd_signal()[len(DF) - 1]
     macd_signal_line_trailing = macd.macd_signal()[0 if len(DF) == 1 else len(DF) - 2]
     
+    if(math.isnan(rsi_k_current) or math.isnan(sma_9_current) or math.isnan(ema_200_current)):
+        i += 1
+        continue
+
+
     def kupwardLONG():
         return (((rsi_k_current - rsi_k_trailing) > 0.05) and (rsi_k_current > rsi_d_current) and (rsi_k_current > 0.5))
     def kupwardSHORT():
@@ -66,15 +71,6 @@ for row in BD.iterrows():
         return ((price_current > sma_9_current))
     def priceupSHORT():
         return ((price_current < sma_9_current))
-
-    if(math.isnan(sma_9_current) or math.isnan(rsi_k_current) or math.isnan(ema_200_current)):
-        DF.at[i, 'close'] = BD.loc[i:i]["close"]
-        i += 1
-        continue
-    if(price_current < ema_200_current):
-        DF.at[i, 'close'] = BD.loc[i:i]["close"]
-        i += 1
-        continue
 
     # LONG BUY
     if(kupwardLONG() and smaupwardLONG() and priceupLONG() and currentPosition.inPositionLONG == False):
@@ -131,7 +127,7 @@ for row in BD.iterrows():
         print('sell price:')
         print(price_current)
         print('profit:')
-        print(profit)
+        print(profit * -1)
         print('capital')
         print(positionStats.capital)
         currentPosition.inPositionSHORT = False

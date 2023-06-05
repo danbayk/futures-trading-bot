@@ -39,24 +39,8 @@ class currentPosition:
 # Establish previous state in the event of a crash/restart
 if(tradeClient.get_order_list()['items'][0]['side'] == 'buy'):
     currentPosition.inPositionLONG = True
-    while True:
-        try:
-            currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
-            break
-        except:
-            time.sleep(1)
-            traceback.print_exc()
-            pass
 if(tradeClient.get_order_list()['items'][0]['side'] == 'sell'):
     currentPosition.inPositionSHORT = True
-    while True:
-        try:
-            currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
-            break
-        except:
-            time.sleep(1)
-            traceback.print_exc()
-            pass
 
 # Buy conditions
 def kupwardLONG(rsi_k_current, rsi_k_trailing, rsi_d_current):
@@ -68,7 +52,7 @@ def kupwardSHORT(rsi_k_current, rsi_k_trailing, rsi_d_current):
             (rsi_k_current < rsi_d_current) and 
             (rsi_k_current < 0.5))
 
-def smaupwardLONG(sma_9_current, sma_9_trailing):
+def smaupwardLONG(sma_9_current, sma_9_trailing): 
     return (sma_9_current - sma_9_trailing) > 1.5
 def smaupwardSHORT(sma_9_current, sma_9_trailing):
     return (sma_9_trailing - sma_9_current) > 1.5
@@ -99,17 +83,6 @@ def executeLONG():
         currentPosition.inPositionLONG = True
     else:
         currentPosition.inPositionSHORT = False
-    # Sleep to make sure avgEntryPrice is updated on exchange
-    time.sleep(2)
-    while True:
-        try:
-            # Set buyprice to exchange-side entry price
-            currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
-            break
-        except:
-            time.sleep(11)
-            traceback.print_exc()
-            pass
 
 # Execute a sell
 def executeSHORT():
@@ -126,8 +99,6 @@ def executeSHORT():
         currentPosition.inPositionSHORT = True
     else:
         currentPosition.inPositionLONG = False
-    currentPosition.buyPrice = 0
-    currentPosition.amtLots = 0
 
 frameLen = 0
 
@@ -187,6 +158,5 @@ while True:
     print((frameLen != len(df) and frameLen != 0))
     if(currentPosition.inPositionLONG == True or currentPosition.inPositionSHORT == True):
         print("---IN POSITION---")
-        print(currentPosition.buyPrice)
     frameLen = len(df)
     time.sleep(5)

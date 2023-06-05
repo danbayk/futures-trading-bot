@@ -29,7 +29,7 @@ userClient = User(api_key, api_secret, api_passphrase)
 
 balance = userClient.get_account_overview('USDT')['availableBalance']
 frameLen = 0
-print(tradeClient.get_order_list()['items'][0]['side'])
+print(tradeClient.get_order_list()['items'])
 while True:
     while True:
         try:
