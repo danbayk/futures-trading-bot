@@ -31,13 +31,24 @@ leverage = 1
 
 # Keep track of current position details
 class currentPosition:
-    inPosition = False
+    inPositionLONG = False
+    inPositionSHORT = False
     buyPrice = 0
     amtLots = 0
 
 # Establish previous state in the event of a crash/restart
-if(len(tradeClient.get_all_position()) == 1):
-    currentPosition.inPosition = True
+if(tradeClient.get_order_list()['items'][0]['side'] == 'buy'):
+    currentPosition.inPositionLONG = True
+    while True:
+        try:
+            currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
+            break
+        except:
+            time.sleep(1)
+            traceback.print_exc()
+            pass
+if(tradeClient.get_order_list()['items'][0]['side'] == 'sell'):
+    currentPosition.inPositionSHORT = True
     while True:
         try:
             currentPosition.buyPrice = tradeClient.get_all_position()[0]['avgEntryPrice']
@@ -84,7 +95,10 @@ def executeLONG():
             time.sleep(11)
             traceback.print_exc()
             pass
-    currentPosition.inPosition = True
+    if(currentPosition.inPositionSHORT == False):
+        currentPosition.inPositionLONG = True
+    else:
+        currentPosition.inPositionSHORT = False
     # Sleep to make sure avgEntryPrice is updated on exchange
     time.sleep(2)
     while True:
@@ -108,7 +122,10 @@ def executeSHORT():
             time.sleep(1)
             traceback.print_exc()
             pass
-    currentPosition.inPosition = False
+    if(currentPosition.inPositionLONG == False):
+        currentPosition.inPositionSHORT = True
+    else:
+        currentPosition.inPositionLONG = False
     currentPosition.buyPrice = 0
     currentPosition.amtLots = 0
 
@@ -143,23 +160,23 @@ while True:
     if(kupwardLONG(rsi_k_current, rsi_k_trailing, rsi_d_current) and
         smaupwardLONG(sma_9_current, sma_9_trailing) and 
         priceupLONG(price_current, sma_9_current) and
-        currentPosition.inPosition == False and 
+        currentPosition.inPositionLONG == False and 
         (frameLen != len(df) and frameLen != 0)):
         # Execute a buy
         executeLONG()
     elif(kupwardSHORT(rsi_k_current, rsi_k_trailing, rsi_d_current) and
         smaupwardSHORT(sma_9_current, sma_9_trailing) and 
         priceupSHORT(price_current, sma_9_current) and
-        currentPosition.inPosition == False and 
+        currentPosition.inPositionSHORT == False and 
         (frameLen != len(df) and frameLen != 0)):
         # Execute a buy
         executeSHORT()
 
     # Selling conditions, can sell on the same tick as buy
-    if(rsi_k_trailing - rsi_k_current > 0 and currentPosition.inPosition == True and (frameLen != len(df) and frameLen != 0)):
+    if(rsi_k_trailing - rsi_k_current > 0 and currentPosition.inPositionLONG == True and (frameLen != len(df) and frameLen != 0)):
         # Execute a short sell
         executeSHORT()
-    elif(rsi_k_current - rsi_k_trailing > 0 and currentPosition.inPosition == True and (frameLen != len(df) and frameLen != 0)):
+    elif(rsi_k_current - rsi_k_trailing > 0 and currentPosition.inPositionSHORT == True and (frameLen != len(df) and frameLen != 0)):
         # Execute a long buy
         executeLONG()
 
@@ -168,7 +185,7 @@ while True:
     print(kupwardSHORT(rsi_k_current, rsi_k_trailing, rsi_d_current), smaupwardSHORT(sma_9_current, sma_9_trailing), priceupSHORT(price_current, sma_9_current))
     print(ema_200_current, sma_9_current, rsi_k_current, rsi_k_trailing)
     print((frameLen != len(df) and frameLen != 0))
-    if(currentPosition.inPosition == True):
+    if(currentPosition.inPositionLONG == True or currentPosition.inPositionSHORT == True):
         print("---IN POSITION---")
         print(currentPosition.buyPrice)
     frameLen = len(df)
