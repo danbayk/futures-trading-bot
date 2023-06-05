@@ -25,6 +25,8 @@ This is a momentum-based strategy that uses SMA and Stochastic RSI for entries a
 This is a momentum-based strategy that uses SMA and Stochastic RSI for both entires and exits. This is currently the best-performing strategy on the 4h timeframe.
 3. `ichimoku.py`
 This is a backtest for the Ichimoku Cloud trading strategy.
+4. `intra_candle_backtest.py`
+This is a backtest for `rsi_sma.py` which takes entries and exits that are unbound by the close price, looping through all 1min price data within a larger time frame. See code comments for detailed usage.
 # Misc Scripts
 The `/misc-scripts` folder contains chart generating programs.
 1. `pandas-to-csv.py`:
