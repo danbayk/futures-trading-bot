@@ -17,7 +17,7 @@ API_PASSPHRASE_FUTURES=<YOUR API PASSPHRASE>
 6. To run the bot: `python bot.py` (most recent version). Modifiable leverage, set to 1 by default.
 ## Backtesting Scripts and Trading Strategies Overview
 **Backtesting scripts:**
-Backtesting scripts are located in `/backtesting-scripts` folder. Each has a source file which can be replaced with any of the `.csv` files located in the `/charts` folder. Backtesting programs use the candle close price as the entry, the trading bot does the same for similar backtest performance. `rsi_macd.py` has code for minute-by-minute price within a larger timeframe for realistic market entires/exits.
+Backtesting scripts are located in `/backtesting-scripts` folder. Each has a source file which can be replaced with any of the `.csv` files located in the `/charts` folder. Backtesting programs use the candle close price as the entry, the trading bot does the same for similar backtest performance. `rsi_macd.py` has code for minute-by-minute price within a larger timeframe for market entires/exits unbound by the candle close price.
 **Trading strategies overview:**
 1. `rsi_macd.py`:
 This is a momentum-based strategy that uses SMA and Stochastic RSI for entries and MACD for exits. Can be run on all timeframes but is still a work in progress due to poor performance during periods of consistent downtrends.
